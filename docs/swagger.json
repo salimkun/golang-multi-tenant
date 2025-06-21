@@ -1,0 +1,196 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is the API documentation for the Multi-Tenant Messaging App.",
+        "title": "Multi-Tenant Messaging App API",
+        "termsOfService": "http://example.com/terms/",
+        "contact": {
+            "name": "API Support",
+            "url": "http://example.com/support",
+            "email": "support@example.com"
+        },
+        "license": {
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:8080",
+    "basePath": "/api",
+    "paths": {
+        "/api/tenants": {
+            "post": {
+                "description": "Creates a new tenant and starts a consumer for the tenant. Also publishes an initial message to the tenant's queue.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Create a new tenant and publish a message",
+                "parameters": [
+                    {
+                        "description": "Tenant ID and initial payload",
+                        "name": "tenant",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/multi-tenant-messaging-app_internal_payload.TenantRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: Tenant created and message published",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: Invalid request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tenants/{id}": {
+            "delete": {
+                "description": "Deletes a tenant and stops the associated RabbitMQ consumer.",
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Delete a tenant and stop its consumer",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: Tenant deleted",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/tenants/{id}/config/concurrency": {
+            "put": {
+                "description": "Updates the number of workers processing messages for a specific tenant.",
+                "tags": [
+                    "Tenants"
+                ],
+                "summary": "Update worker concurrency for a tenant",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tenant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Number of workers",
+                        "name": "workers",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/multi-tenant-messaging-app_internal_payload.UpdateConcurrencyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "message: Concurrency updated",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "error: Invalid workers configuration",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "error: Internal server error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "multi-tenant-messaging-app_internal_payload.TenantRequest": {
+            "type": "object",
+            "properties": {
+                "payload": {
+                    "description": "Payload untuk pesan awal",
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "tenant_id": {
+                    "description": "ID unik tenant",
+                    "type": "string"
+                }
+            }
+        },
+        "multi-tenant-messaging-app_internal_payload.UpdateConcurrencyRequest": {
+            "type": "object",
+            "properties": {
+                "workers": {
+                    "description": "Jumlah worker",
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

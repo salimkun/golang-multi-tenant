@@ -1,0 +1,133 @@
+basePath: /api
+definitions:
+  multi-tenant-messaging-app_internal_payload.TenantRequest:
+    properties:
+      payload:
+        additionalProperties: true
+        description: Payload untuk pesan awal
+        type: object
+      tenant_id:
+        description: ID unik tenant
+        type: string
+    type: object
+  multi-tenant-messaging-app_internal_payload.UpdateConcurrencyRequest:
+    properties:
+      workers:
+        description: Jumlah worker
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://example.com/support
+  description: This is the API documentation for the Multi-Tenant Messaging App.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://example.com/terms/
+  title: Multi-Tenant Messaging App API
+  version: "1.0"
+paths:
+  /api/tenants:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new tenant and starts a consumer for the tenant. Also
+        publishes an initial message to the tenant's queue.
+      parameters:
+      - description: Tenant ID and initial payload
+        in: body
+        name: tenant
+        required: true
+        schema:
+          $ref: '#/definitions/multi-tenant-messaging-app_internal_payload.TenantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'message: Tenant created and message published'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid request'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a new tenant and publish a message
+      tags:
+      - Tenants
+  /api/tenants/{id}:
+    delete:
+      description: Deletes a tenant and stops the associated RabbitMQ consumer.
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: 'message: Tenant deleted'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a tenant and stop its consumer
+      tags:
+      - Tenants
+  /api/tenants/{id}/config/concurrency:
+    put:
+      description: Updates the number of workers processing messages for a specific
+        tenant.
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Number of workers
+        in: body
+        name: workers
+        required: true
+        schema:
+          $ref: '#/definitions/multi-tenant-messaging-app_internal_payload.UpdateConcurrencyRequest'
+      responses:
+        "200":
+          description: 'message: Concurrency updated'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: 'error: Invalid workers configuration'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update worker concurrency for a tenant
+      tags:
+      - Tenants
+swagger: "2.0"
