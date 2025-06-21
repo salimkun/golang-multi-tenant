@@ -16,5 +16,11 @@ migrate-new:
 	@read -p "Enter migration name: " name; \
 	migrate create -ext sql -dir migrations -seq "$$name"
 
+mockgen:
+	go generate ./...
+
 test:
-	go test ./...
+	go test ./... -coverprofile=coverage.out && go tool cover -func=coverage.out
+
+test-coverage:
+	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out

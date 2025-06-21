@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"multi-tenant-messaging-app/internal/model"
-	"strings"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -35,9 +34,9 @@ func (r *MessageRepository) FetchMessages(tenantID string, cursor string, limit 
 	}
 
 	var result []map[string]interface{}
-	var lastID string
+	var nextCursor string
 
-	for _, msg := range messages {
+	for i, msg := range messages {
 		var payloadMap map[string]interface{}
 		if err := json.Unmarshal([]byte(msg.Payload), &payloadMap); err != nil {
 			return nil, "", fmt.Errorf("failed to unmarshal payload: %w", err)
@@ -48,10 +47,14 @@ func (r *MessageRepository) FetchMessages(tenantID string, cursor string, limit 
 			"payload":    payloadMap,
 			"created_at": msg.CreatedAt,
 		})
-		lastID = msg.ID.String()
+		nextCursor = msg.ID.String()
+		// Simpan next_cursor sebagai ID dari pesan terakhir jika ini adalah iterasi terakhir
+		if i == len(messages)-1 {
+			nextCursor = msg.ID.String()
+		}
 	}
 
-	return result, lastID, nil
+	return result, nextCursor, nil
 }
 
 func (r *MessageRepository) SaveMessage(tenantID string, payload map[string]interface{}) error {
@@ -76,24 +79,5 @@ func (r *MessageRepository) SaveMessage(tenantID string, payload map[string]inte
 	}
 
 	log.Printf("Message saved for tenant %s", tenantID)
-	return nil
-}
-
-func (r *MessageRepository) CreateTenantPartition(tenantID string) error {
-	// Ganti karakter '-' dengan '_'
-	tableName := fmt.Sprintf("messages_tenant_%s", tenantID)
-	tableName = strings.ReplaceAll(tableName, "-", "_")
-
-	query := fmt.Sprintf(`
-        CREATE TABLE IF NOT EXISTS %s PARTITION OF messages
-        FOR VALUES IN ('%s')
-    `, tableName, tenantID)
-
-	// Eksekusi query menggunakan GORM
-	if err := r.db.Exec(query).Error; err != nil {
-		return fmt.Errorf("failed to create tenant partition: %w", err)
-	}
-
-	log.Printf("Partition created for tenant %s", tenantID)
 	return nil
 }

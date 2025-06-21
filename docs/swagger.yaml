@@ -130,4 +130,37 @@ paths:
       summary: Update worker concurrency for a tenant
       tags:
       - Tenants
+  /api/tenants/{tenant_id}/messages:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of messages for a specific tenant, with optional
+        cursor-based pagination.
+      parameters:
+      - description: Tenant ID
+        in: path
+        name: tenant_id
+        required: true
+        type: string
+      - description: Cursor for pagination
+        in: query
+        name: cursor
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 'messages: List of messages, last_id: ID of the last message'
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: 'error: Internal server error'
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Fetch messages for a tenant
+      tags:
+      - Messages
 swagger: "2.0"

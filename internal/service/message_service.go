@@ -8,6 +8,12 @@ import (
 	"github.com/streadway/amqp"
 )
 
+//go:generate mockgen -source=message_service.go -destination=mocks/message_service_mock.go -package=mocks
+type MessageServiceInterface interface {
+	FetchMessages(tenantID string, cursor string, limit int) ([]map[string]interface{}, string, error)
+	PublishToTenantQueue(tenantID string, payload map[string]interface{}) error
+}
+
 type MessageService struct {
 	repo       *repository.MessageRepository
 	rabbitConn *amqp.Connection
